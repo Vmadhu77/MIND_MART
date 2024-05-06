@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopping Cart</title>
+  <style>
+    /* CSS styles for your page */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: lightgrey;
+      margin: 0;
+      padding: 0;
+    }
+
+    h2 {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    a.button {
+      display: inline-block;
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      text-align: center;
+      text-decoration: none;
+      font-size: 16px;
+      margin: 10px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease-in-out;
+    }
+
+    .item:hover {
+      transform: translateY(-5px);
+    }
+
+    .item img {
+      width: 80px;
+      height: auto;
+      border-radius: 5px;
+      margin-right: 10px;
+    }
+
+    .item-info {
+      flex-grow: 1;
+      text-align: left;
+    }
+
+    .item-info span {
+      display: block;
+    }
+
+    input[type="number"] {
+      width: 50px;
+      padding: 5px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    button[disabled] {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    #totalBill {
+      font-weight: bold;
+    }
+
+    #thankYouMessage {
+      font-style: italic;
+    }
+
+    .flex-container {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .flex-item {
+      flex-basis: 45%;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Shopping Cart</h2>
+
+    <div class="flex-container">
+      <div class="flex-item">
+        <a href="#" onclick="openCheckPricesPage()" class="button">Check Prices</a>
+        <div id="checkPricesPage" style="display: none;">
+          <h2>Available Items</h2>
+          <div id="itemCatalog" class="items-container">
+            <!-- Populate item catalog dynamically with JavaScript -->
+          </div>
+        </div>
+      </div>
+      <div class="flex-item">
+        <a href="#" onclick="openSelectItemsPage()" class="button">Select Items</a>
+        <div id="selectItemsPage" style="display: none;">
+          <h2>Select Items</h2>
+          <div id="shoppingCart" class="items-container">
+            <!-- Selected items will be displayed here -->
+          </div>
+          <div id="totalSum"></div>
+          <button id="submitBtn" onclick="submitOrder()">Submit</button> <!-- Submit button -->
+        </div>
+      </div>
+    </div>
+
+    <div id="orderSummary" style="display: none;">
+      <h2>Order Summary</h2>
+      <div id="customerName"></div>
+      <div id="cartItems"></div>
+      <div id="totalBill"></div>
+      <p id="thankYouMessage"></p>
+    </div>
+  </div>
+
+  <script>
+    // Sample data for items and prices
+    const items = [
+      { name: 'Item 1', price: 10, image: 'image1.jpg' },
+      { name: 'Item 2', price: 20, image: 'image7.jpg'},
+      { name: 'Item 3', price: 15, image: 'image3.jpg'},
+      { name: 'Item 4', price: 40, image: 'image21.jpg'},
+      { name: 'Item 5', price: 25, image: 'image18.jpg'},
+      { name: 'Item 6', price: 50, image: 'image12.jpg'},
+      { name: 'Item 7', price: 35, image: 'image22.jpg'},
+      { name: 'Item 8', price: 80, image: 'image20.jpg'},
+      { name: 'Item 9', price: 50, image: 'image19.jpg'},
+      { name: 'Item 10', price: 60, image: 'image10.jpg' },
+      // Add more items as needed
+    ];
+
+    // Array to store selected items
+    const selectedItems = [];
+
+    // Function to open the check prices page
+    function openCheckPricesPage() {
+      document.getElementById('checkPricesPage').style.display = 'block';
+      populateItemCatalog();
+    }
+
+    // Function to open the select items page
+    function openSelectItemsPage() {
+      document.getElementById('selectItemsPage').style.display = 'block';
+      displaySelectItems();
+    }
+
+    // Function to populate item catalog
+    function populateItemCatalog() {
+      const itemCatalog = document.getElementById('itemCatalog');
+      itemCatalog.innerHTML = '';
+      items.forEach(item => {
+        const itemDiv = document.createElement('div');
+        itemDiv.classList.add('item');
+        itemDiv.innerHTML = `
+          <img src="${item.image}" alt="${item.name}">
+          <div class="item-info">
+            <span>${item.name}</span>
+            <span>$${item.price}</span>
+          </div>
+        `;
+        itemCatalog.appendChild(itemDiv);
+      });
+    }
+    // Function to display items for selection
+    function displaySelectItems() {
+      const shoppingCart = document.getElementById('shoppingCart');
+      shoppingCart.innerHTML = '';
+      items.forEach(item => {
+        const itemDiv = document.createElement('div');
+        itemDiv.classList.add('item');
+        itemDiv.innerHTML = `
+          <img src="${item.image}" alt="${item.name}">
+          <div class="item-info">
+            <span>${item.name}</span>
+            <span>$${item.price}</span>
+            Quantity: <input type="number" id="${item.name.replace(' ', '_')}_quantity" value="0" min="0">
+            <button onclick="addToCart('${item.name}', ${item.price}, this)">Add to Cart</button>
+          </div>
+        `;
+        shoppingCart.appendChild(itemDiv);
+      });
+    }
+
+    // Function to add item to shopping cart
+    function addToCart(name, price, button) {
+      const quantityInput = document.getElementById(`${name.replace(' ', '_')}_quantity`);
+      const quantity = parseInt(quantityInput.value);
+      if (quantity > 0) {
+        const totalPrice = quantity * price;
+        selectedItems.push({ name, quantity, totalPrice });
+        button.disabled = true; // Disable the button after adding to cart
+      } else {
+        alert('Please enter a valid quantity.');
+      }
+    }
+
+    // Function to submit the order
+    function submitOrder() {
+      // Hide the submit button
+      document.getElementById('submitBtn').style.display = 'none';
+
+      // Show the order summary
+      document.getElementById('orderSummary').style.display = 'block';
+
+      // Get the customer name
+      const customerName = prompt('Please enter your name:');
+      document.getElementById('customerName').textContent = `Customer Name: ${customerName}`;
+
+      // Display cart items and total bill
+      displayOrderSummary();
+    }
+
+    // Function to display order summary
+    function displayOrderSummary() {
+      const cartItems = document.getElementById('cartItems');
+      cartItems.innerHTML = ''; // Clear existing content
+      selectedItems.forEach(item => {
+        const cartItemDiv = document.createElement('div');
+        cartItemDiv.textContent = `${item.name} - Quantity: ${item.quantity} - Total: $${item.totalPrice.toFixed(2)}`;
+        cartItems.appendChild(cartItemDiv);
+      });
+
+      // Calculate total bill
+      let totalBill = selectedItems.reduce((total, item) => total + item.totalPrice, 0);
+
+      // Display total bill
+      document.getElementById('totalBill').textContent = `Total Bill: $${totalBill.toFixed(2)}`;
+
+      // Display thank you message
+      document.getElementById('thankYouMessage').textContent = 'Thank you for shopping with us! Visit again!';
+    }
+  </script>
+</body>
+</html>
