@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Game</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(4, 120px); /* Increased card width */
+      grid-auto-rows: 120px; /* Increased card height */
+      gap: 10px; /* Gap between grid items */
+      padding: 20px; /* Padding around the grid */
+      border: 2px solid #333; /* Dark border around the grid */
+      border-radius: 10px; /* Rounded corners */
+      background-color: #fff; /* White background for grid */
+    }
+    .grid-item {
+      width: 120px; /* Increased card width */
+      height: 120px; /* Increased card height */
+      border: 1px solid #ccc; /* Light border around each card */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 5px; /* Rounded corners for cards */
+      overflow: hidden; /* Hide overflow content */
+      position: relative; /* Position relative for absolute positioning */
+    }
+    .grid-item img {
+      max-width: 100%;
+      max-height: 100%;
+      transition: transform 0.3s ease; /* Smooth transition for image flip */
+    }
+    .grid-item:hover img {
+      transform: scale(1.1); /* Scale up image on hover */
+    }
+    #timer {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 20px; /* Increased font size for timer */
+    }
+    #score {
+      position: absolute;
+      bottom: 10px;
+      font-size: 24px;
+    }
+    #message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 36px;
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-container" id="grid-container">
+    <!-- Images will be generated dynamically -->
+  </div>
+  <div id="timer">Time Left: <span id="time-left">45</span> seconds</div>
+  <div id="score">Score: <span id="points">0</span></div>
+  <div id="message" style="display: none;">Congratulations! You completed the game!</div>
+
+  <script>
+    // Function to randomly select cards and create an array with double cards
+    function selectCards(numCards, uniqueCards) {
+      const selectedCards = [];
+      for (let i = 0; i < numCards / 2; i++) {
+        const randomIndex = Math.floor(Math.random() * uniqueCards.length);
+        selectedCards.push(uniqueCards[randomIndex]);
+        selectedCards.push(uniqueCards[randomIndex]); // Add the card twice
+        uniqueCards.splice(randomIndex, 1); // Remove the selected card from the uniqueCards array
+      }
+      return selectedCards;
+    }
+
+    // Function to shuffle the array
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    // Paths to the unique images
+    const uniqueImagePaths = [
+      'image1.jpg', 'image2.jpg', 'image3.jpg', 'image4.jpg',
+      'image5.jpg', 'image6.jpg', 'image7.jpg', 'image8.jpg',
+      'image10.jpg', 'image11.jpg', 'image12.jpg', 'image13.jpg',
+      'image14.jpg', 'image15.jpg', 'image16.jpg'
+    ];
+
+    // Select 16 random cards (8 unique cards, each repeated twice)
+    const selectedImagePaths = selectCards(16, uniqueImagePaths.slice());
+
+    // Shuffle the array of selected image paths
+    shuffle(selectedImagePaths);
+
+    // Get the grid container
+    const gridContainer = document.getElementById('grid-container');
+
+    // Keep track of the first and second selected cards
+    let firstSelectedCard = null;
+    let secondSelectedCard = null;
+    let canSelect = true; // Flag to prevent selecting more than 2 cards at once
+
+    // Score and timer variables
+    let points = 0;
+    let timeLeft = 45;
+    const timerElement = document.getElementById('time-left');
+    const scoreElement = document.getElementById('points');
+    const messageElement = document.getElementById('message');
+
+    // Start the timer
+    const timerInterval = setInterval(() => {
+      timeLeft--;
+      timerElement.textContent = timeLeft;
+      if (timeLeft === 0) {
+        clearInterval(timerInterval);
+        messageElement.textContent = 'Time is up! Your score: ' + points;
+        messageElement.style.display = 'block';
+        gridContainer.style.display = 'none';
+      }
+    }, 1000);
+
+    // Loop through the selected image paths array and create HTML elements for each image
+    selectedImagePaths.forEach(imagePath => {
+      const gridItem = document.createElement('div');
+      gridItem.classList.add('grid-item');
+      const image = document.createElement('img');
+      image.src = 'cover1.jpg'; // Path to the cover image
+      image.alt = 'Image';
+      image.dataset.src = imagePath; // Store the actual image path as a data attribute
+      image.addEventListener('click', function() {
+        if (!canSelect) return; // Prevent selecting more than 2 cards at once
+        if (this === firstSelectedCard) return; // Prevent selecting the same card twice
+        if (!firstSelectedCard) {
+          firstSelectedCard = this;
+          this.src = imagePath; // Reveal the image
+        } else {
+          secondSelectedCard = this;
+          this.src = imagePath; // Reveal the image
+          canSelect = false; // Prevent selecting more cards until the comparison is done
+          setTimeout(() => {
+            if (firstSelectedCard.dataset.src === secondSelectedCard.dataset.src) {
+              // Match found, hide the cards
+              firstSelectedCard.style.visibility = 'hidden';
+              secondSelectedCard.style.visibility = 'hidden';
+              points++; // Increment the score
+              scoreElement.textContent = points; // Update the score display
+              // Check if all cards are matched
+              if (points === selectedImagePaths.length / 2) {
+                clearInterval(timerInterval);
+                messageElement.textContent = 'Congratulations! You completed the level!';
+                messageElement.style.display = 'block';
+                gridContainer.style.display = 'none';
+              }
+            } else {
+              // No match, cover the cards again
+              firstSelectedCard.src = 'cover1.jpg';
+              secondSelectedCard.src = 'cover1.jpg';
+            }
+            // Reset the selected cards and allow selecting again
+            firstSelectedCard = null;
+            secondSelectedCard = null;
+            canSelect = true;
+          }, 1000); // Wait for 1 second before comparing and covering cards
+        }
+      });
+      gridItem.appendChild(image);
+      gridContainer.appendChild(gridItem);
+    });
+  </script>
+</body>
+</html>
